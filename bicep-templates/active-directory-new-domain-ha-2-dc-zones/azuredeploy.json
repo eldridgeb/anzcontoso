@@ -11,6 +11,7 @@
     "location": {
       "type": "string",
       "allowedValues": [
+        "australiaeast",
         "centralus",
         "eastus",
         "eastus2",
@@ -36,12 +37,6 @@
       "defaultValue": "contoso.local",
       "metadata": {
         "description": "The FQDN of the AD Domain created "
-      }
-    },
-    "dnsPrefix": {
-      "type": "string",
-      "metadata": {
-        "description": "The DNS prefix for the public IP address used by the Load Balancer"
       }
     },
     "vmSize": {
@@ -71,16 +66,10 @@
     "imageOffer": "WindowsServer",
     "imageSKU": "2019-Datacenter",
     "virtualNetworkName": "adVNET",
-    "virtualNetworkAddressRange": "10.0.0.0/16",
+    "virtualNetworkAddressRange": "10.100.0.0/23",
     "adSubnetName": "adSubnet",
-    "adSubnet": "10.0.0.0/24",
+    "adSubnet": "10.100.0.0/25",
     "adSubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('adSubnetName'))]",
-    "publicIPSKU": "Standard",
-    "publicIPAddressName": "adPublicIp",
-    "publicIPAddressType": "Static",
-    "publicIpAddressId": {
-      "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
-    },
     "vnetTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken')))]",
     "nicTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/nic.json', parameters('_artifactsLocationSasToken')))]",
     "vmName": [
@@ -92,8 +81,8 @@
       "adBDCNic"
     ],
     "ipAddress": [
-      "10.0.0.4",
-      "10.0.0.5"
+      "10.100.0.4",
+      "10.100.0.5"
     ],
     "configureADBDCTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/configureADBDC.json', parameters('_artifactsLocationSasToken')))]",
     "adBDCConfigurationModulesURL": "[uri(parameters('_artifactsLocation'), 'DSC/ConfigureADBDC.ps1.zip')]",
@@ -101,24 +90,6 @@
     "adBDCConfigurationFunction": "ConfigureADBDC"
   },
   "resources": [
-    {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2020-11-01",
-      "name": "[variables('publicIPAddressName')]",
-      "location": "[parameters('location')]",
-      "sku": {
-        "name": "[variables('publicIPSKU')]"
-      },
-      "zones": [
-        "1"
-      ],
-      "properties": {
-        "publicIPAllocationMethod": "[variables('publicIPAddressType')]",
-        "dnsSettings": {
-          "domainNameLabel": "[parameters('dnsPrefix')]"
-        }
-      }
-    },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2020-10-01",
@@ -158,8 +129,7 @@
         "count": 2
       },
       "dependsOn": [
-        "CreateVNet",
-        "[resourceId('Microsoft.Network/publicIpAddresses', variables('publicIPAddressName'))]"
+        "CreateVNet"
       ],
       "properties": {
         "ipConfigurations": [
@@ -168,7 +138,6 @@
             "properties": {
               "privateIPAllocationMethod": "Static",
               "privateIPAddress": "[variables('iPAddress')[copyIndex()]]",
-              "publicIPAddress": "[if(equals(copyIndex(), 0), variables('publicIpAddressId'), json('null'))]",
               "subnet": {
                 "id": "[variables('adSubnetRef')]"
               }
