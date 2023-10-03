@@ -65,6 +65,7 @@
     "imagePublisher": "MicrosoftWindowsServer",
     "imageOffer": "WindowsServer",
     "imageSKU": "2019-Datacenter",
+    "nsgName": "adNSG",
     "virtualNetworkName": "adVNET",
     "virtualNetworkAddressRange": "10.100.0.0/23",
     "adSubnetName": "adSubnet",
@@ -101,6 +102,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "nsgName": {
+            "value": "[variables('nsgName')]"
+          },
           "virtualNetworkName": {
             "value": "[variables('virtualNetworkName')]"
           },
@@ -278,6 +282,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "nsgName": {
+            "value": "[variables('nsgName')]"
+          },
           "virtualNetworkName": {
             "value": "[variables('virtualNetworkName')]"
           },
@@ -401,6 +408,9 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
+          "nsgName": {
+            "value": "[variables('nsgName')]"
+          },
           "virtualNetworkName": {
             "value": "[variables('virtualNetworkName')]"
           },
