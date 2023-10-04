@@ -5,13 +5,24 @@ param virtualNetworkName string
 param virtualNetworkAddressRange string
 
 @description('The name of the subnet created in the new VNET')
-param subnetName string
+param adSubnetName string
 
-@description('The address range of the subnet created in the new VNET')
-param subnetRange string
+@description('The address range of the AD subnet created in the new VNET')
+param adSubnetRange string
+
+@description('The address range of the Bastion subnet created in the new VNET')
+param bastionSubnetRange string
 
 @description('Location for all resources.')
 param location string
+
+resource nsg 'Microsoft.Network/networkSecurityGroups@2022-07-01' = {
+  name: '${virtualNetworkName}-nsg'
+  location: location
+  properties: {
+    securityRules: []
+  }
+}
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-07-01' = {
   name: virtualNetworkName
@@ -24,9 +35,21 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-07-01' = {
     }
     subnets: [
       {
-        name: subnetName
+        name: 'AzureBastionSubnet'
         properties: {
-          addressPrefix: subnetRange
+          addressPrefix: bastionSubnetRange
+          networkSecurityGroup: {
+            id: nsg.id
+          }
+        }
+      }
+      {
+        name: adSubnetName
+        properties: {
+          addressPrefix: adSubnetRange
+          networkSecurityGroup: {
+            id: nsg.id
+          }
         }
       }
     ]

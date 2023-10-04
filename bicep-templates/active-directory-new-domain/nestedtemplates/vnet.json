@@ -1,6 +1,13 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.21.1.54444",
+      "templateHash": "2989423692777095721"
+    }
+  },
   "parameters": {
     "virtualNetworkName": {
       "type": "string",
@@ -14,16 +21,22 @@
         "description": "The address range of the new VNET in CIDR format"
       }
     },
-    "subnetName": {
+    "adSubnetName": {
       "type": "string",
       "metadata": {
         "description": "The name of the subnet created in the new VNET"
       }
     },
-    "subnetRange": {
+    "adSubnetRange": {
       "type": "string",
       "metadata": {
-        "description": "The address range of the subnet created in the new VNET"
+        "description": "The address range of the AD subnet created in the new VNET"
+      }
+    },
+    "bastionSubnetRange": {
+      "type": "string",
+      "metadata": {
+        "description": "The address range of the Bastion subnet created in the new VNET"
       }
     },
     "location": {
@@ -35,9 +48,18 @@
   },
   "resources": [
     {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2022-07-01",
+      "name": "[format('{0}-nsg', parameters('virtualNetworkName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": []
+      }
+    },
+    {
       "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2022-07-01",
       "name": "[parameters('virtualNetworkName')]",
-      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "properties": {
         "addressSpace": {
@@ -47,13 +69,28 @@
         },
         "subnets": [
           {
-            "name": "[parameters('subnetName')]",
+            "name": "AzureBastionSubnet",
             "properties": {
-              "addressPrefix": "[parameters('subnetRange')]"
+              "addressPrefix": "[parameters('bastionSubnetRange')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
+              }
+            }
+          },
+          {
+            "name": "[parameters('adSubnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('adSubnetRange')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
+              }
             }
           }
         ]
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
+      ]
     }
   ]
 }
