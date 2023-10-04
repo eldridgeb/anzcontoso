@@ -1,13 +1,6 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
-  "metadata": {
-    "_generator": {
-      "name": "bicep",
-      "version": "0.21.1.54444",
-      "templateHash": "7271198813780747264"
-    }
-  },
   "parameters": {
     "virtualNetworkName": {
       "type": "string",
@@ -49,8 +42,8 @@
   "resources": [
     {
       "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "2022-07-01",
       "name": "[parameters('virtualNetworkName')]",
+      "apiVersion": "2022-05-01",
       "location": "[parameters('location')]",
       "properties": {
         "addressSpace": {

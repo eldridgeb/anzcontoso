@@ -6,7 +6,10 @@ param adminUsername string
 param adminPassword string
 
 @description('The FQDN of the Active Directory Domain to be created')
-param domainName string
+param domainName string = 'anzcontoso.local'
+
+//@description('The DNS prefix for the public IP address used by the Load Balancer')
+//param dnsPrefix string
 
 @description('Size of the VM for the controller')
 param vmSize string = 'Standard_D2s_v3'
@@ -31,24 +34,48 @@ param virtualNetworkName string = 'adVNET'
 @description('Virtual network address range.')
 param virtualNetworkAddressRange string = '10.100.0.0/24'
 
+//@description('Load balancer front end IP address name.')
+//param loadBalancerFrontEndIPName string = 'LBFE'
+
+//@description('Backend address pool name.')
+//param backendAddressPoolName string = 'LBBE'
+
+//@description('Inbound NAT rules name.')
+//param inboundNatRulesName string = 'adRDP'
+
 @description('Network interface name.')
 param networkInterfaceName string = 'adNic'
 
 @description('Private IP address.')
-param privateIPAddress string = '10.100.0.64'
+param privateIPAddress string = '10.100.0.4'
 
-@description('AD subnet name.')
-param adSubnetName string = 'adSubnet'
+@description('Subnet name.')
+param subnetName string = 'adSubnet'
 
-@description('AD subnet IP range.')
-param adSubnetRange string = '10.100.0.64/26'
+@description('Subnet IP range.')
+param subnetRange string = '10.100.0.0/25'
 
-@description('Bastion subnet IP range.')
-param bastionSubnetRange string = '10.100.0.0/26'
+//@description('Subnet IP range.')
+//param publicIPAddressName string = 'adPublicIP'
 
 @description('Availability set name.')
 param availabilitySetName string = 'adAvailabiltySet'
 
+//@description('Load balancer name.')
+//param loadBalancerName string = 'adLoadBalancer'
+
+/*
+resource publicIPAddress 'Microsoft.Network/publicIPAddresses@2022-07-01' = {
+  name: publicIPAddressName
+  location: location
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    dnsSettings: {
+      domainNameLabel: dnsPrefix
+    }
+  }
+}
+*/
 
 resource availabilitySet 'Microsoft.Compute/availabilitySets@2022-08-01' = {
   location: location
@@ -68,49 +95,49 @@ module VNet 'nestedtemplates/vnet.bicep' = {
   params: {
     virtualNetworkName: virtualNetworkName
     virtualNetworkAddressRange: virtualNetworkAddressRange
-    adSubnetName: adSubnetName
-    adSubnetRange: adSubnetRange
-    bastionSubnetRange: bastionSubnetRange
+    subnetName: subnetName
+    subnetRange: subnetRange
     location: location
   }
 }
 
-// Create a public IP address for the bastion host
-resource bastionPip 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
-  name: 'bastionPip'
+/*
+resource loadBalancer 'Microsoft.Network/loadBalancers@2022-07-01' = {
+  name: loadBalancerName
   location: location
   properties: {
-    publicIPAllocationMethod: 'Static'
-    publicIPAddressVersion: 'IPv4'
-    dnsSettings: {
-      domainNameLabel: 'bastion-${uniqueString(resourceGroup().id)}'
-    }
-  }
-}
-
-// Create a bastion host
-resource bastion 'Microsoft.Network/bastionHosts@2023-05-01' = {
-  name: 'adBastion'
-  location: location
-  properties: {
-    ipConfigurations: [
+    frontendIPConfigurations: [
       {
-        name: 'bastionIpConfig'
+        name: loadBalancerFrontEndIPName
         properties: {
-          subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, 'AzureBastionSubnet')
-          }
           publicIPAddress: {
-            id: bastionPip.id
+            id: publicIPAddress.id
           }
         }
       }
     ]
+    backendAddressPools: [
+      {
+        name: backendAddressPoolName
+      }
+    ]
+    inboundNatRules: [
+      {
+        name: inboundNatRulesName
+        properties: {
+          frontendIPConfiguration: {
+            id: resourceId('Microsoft.Network/loadBalancers/frontendIPConfigurations', loadBalancerName, loadBalancerFrontEndIPName)
+          }
+          protocol: 'Tcp'
+          frontendPort: 3389
+          backendPort: 3389
+          enableFloatingIP: false
+        }
+      }
+    ]
   }
-  dependsOn: [
-    VNet
-  ]
 }
+*/
 
 resource networkInterface 'Microsoft.Network/networkInterfaces@2022-07-01' = {
   name: networkInterfaceName
@@ -123,14 +150,27 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2022-07-01' = {
           privateIPAllocationMethod: 'Static'
           privateIPAddress: privateIPAddress
           subnet: {
-            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, adSubnetName)
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', virtualNetworkName, subnetName)
           }
+          /*
+          loadBalancerBackendAddressPools: [
+            {
+              id: resourceId('Microsoft.Network/loadBalancers/backendAddressPools', loadBalancerName, backendAddressPoolName)
+            }
+          ]
+          loadBalancerInboundNatRules: [
+            {
+              id: resourceId('Microsoft.Network/loadBalancers/inboundNatRules', loadBalancerName, inboundNatRulesName)
+            }
+          ]
+          */
         }
       }
     ]
   }
   dependsOn: [
     VNet
+    //loadBalancer
   ]
 }
 
@@ -185,6 +225,9 @@ resource virtualMachine 'Microsoft.Compute/virtualMachines@2022-08-01' = {
       ]
     }
   }
+  dependsOn: [
+    //loadBalancer
+  ]
 }
 
 resource createADForest 'Microsoft.Compute/virtualMachines/extensions@2022-08-01' = {
@@ -215,7 +258,6 @@ resource createADForest 'Microsoft.Compute/virtualMachines/extensions@2022-08-01
   }
 }
 
-/*
 module updateVNetDNS 'nestedtemplates/vnet-with-dns-server.bicep' = {
   scope: resourceGroup()
   name: 'UpdateVNetDNS'
@@ -233,4 +275,3 @@ module updateVNetDNS 'nestedtemplates/vnet-with-dns-server.bicep' = {
     createADForest
   ]
 }
-*/
