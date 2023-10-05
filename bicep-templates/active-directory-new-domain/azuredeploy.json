@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.21.1.54444",
-      "templateHash": "6718066207292038166"
+      "templateHash": "14535178467103677879"
     }
   },
   "parameters": {
@@ -126,6 +126,17 @@
       },
       "sku": {
         "name": "Aligned"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}-nsg', parameters('virtualNetworkName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {}
+        ]
       }
     },
     {
@@ -264,6 +275,9 @@
           },
           "location": {
             "value": "[parameters('location')]"
+          },
+          "nsgId": {
+            "value": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
           }
         },
         "template": {
@@ -273,7 +287,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.21.1.54444",
-              "templateHash": "13063014499650587312"
+              "templateHash": "17126112829618781566"
             }
           },
           "parameters": {
@@ -306,6 +320,12 @@
               "metadata": {
                 "description": "Location for all resources."
               }
+            },
+            "nsgId": {
+              "type": "string",
+              "metadata": {
+                "description": "The ID of the Network Security Group to create"
+              }
             }
           },
           "resources": [
@@ -324,7 +344,10 @@
                   {
                     "name": "[parameters('subnetName')]",
                     "properties": {
-                      "addressPrefix": "[parameters('subnetRange')]"
+                      "addressPrefix": "[parameters('subnetRange')]",
+                      "networkSecurityGroup": {
+                        "id": "[parameters('nsgId')]"
+                      }
                     }
                   }
                 ]
@@ -332,7 +355,10 @@
             }
           ]
         }
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
+      ]
     },
     {
       "type": "Microsoft.Resources/deployments",
@@ -363,6 +389,9 @@
           },
           "location": {
             "value": "[parameters('location')]"
+          },
+          "nsgId": {
+            "value": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
           }
         },
         "template": {
@@ -372,7 +401,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.21.1.54444",
-              "templateHash": "7271198813780747264"
+              "templateHash": "2460817014636454010"
             }
           },
           "parameters": {
@@ -411,6 +440,12 @@
               "metadata": {
                 "description": "Location for all resources."
               }
+            },
+            "nsgId": {
+              "type": "string",
+              "metadata": {
+                "description": "The ID of the Network Security Group to create"
+              }
             }
           },
           "resources": [
@@ -432,7 +467,10 @@
                   {
                     "name": "[parameters('subnetName')]",
                     "properties": {
-                      "addressPrefix": "[parameters('subnetRange')]"
+                      "addressPrefix": "[parameters('subnetRange')]",
+                      "networkSecurityGroup": {
+                        "id": "[parameters('nsgId')]"
+                      }
                     }
                   }
                 ]
@@ -442,7 +480,8 @@
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('virtualMachineName'), 'CreateADForest')]"
+        "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('virtualMachineName'), 'CreateADForest')]",
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
       ]
     }
   ]

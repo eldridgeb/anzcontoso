@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.21.1.54444",
-      "templateHash": "5666656200145130406"
+      "templateHash": "17126112829618781566"
     }
   },
   "parameters": {
@@ -38,20 +38,15 @@
       "metadata": {
         "description": "Location for all resources."
       }
+    },
+    "nsgId": {
+      "type": "string",
+      "metadata": {
+        "description": "The ID of the Network Security Group to create"
+      }
     }
   },
   "resources": [
-    {
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2023-05-01",
-      "name": "[format('{0}-nsg', parameters('virtualNetworkName'))]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "securityRules": [
-          {}
-        ]
-      }
-    },
     {
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2022-07-01",
@@ -69,15 +64,12 @@
             "properties": {
               "addressPrefix": "[parameters('subnetRange')]",
               "networkSecurityGroup": {
-                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
+                "id": "[parameters('nsgId')]"
               }
             }
           }
         ]
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
-      ]
+      }
     }
   ]
 }
