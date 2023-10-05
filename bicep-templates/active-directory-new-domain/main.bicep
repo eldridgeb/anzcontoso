@@ -92,11 +92,6 @@ resource availabilitySet 'Microsoft.Compute/availabilitySets@2022-08-01' = {
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: '${virtualNetworkName}-nsg'
   location: location
-  properties: {
-    securityRules: [
-      {}
-    ]
-  }
 }
 
 module VNet 'nestedtemplates/vnet.bicep' = {
