@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.21.1.54444",
-      "templateHash": "14535178467103677879"
+      "templateHash": "17297597400116457647"
     }
   },
   "parameters": {
@@ -132,12 +132,7 @@
       "type": "Microsoft.Network/networkSecurityGroups",
       "apiVersion": "2023-05-01",
       "name": "[format('{0}-nsg', parameters('virtualNetworkName'))]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "securityRules": [
-          {}
-        ]
-      }
+      "location": "[parameters('location')]"
     },
     {
       "type": "Microsoft.Network/networkInterfaces",
