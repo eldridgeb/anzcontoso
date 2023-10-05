@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.21.1.54444",
-      "templateHash": "13063014499650587312"
+      "templateHash": "5666656200145130406"
     }
   },
   "parameters": {
@@ -42,6 +42,17 @@
   },
   "resources": [
     {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}-nsg', parameters('virtualNetworkName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {}
+        ]
+      }
+    },
+    {
       "type": "Microsoft.Network/virtualNetworks",
       "apiVersion": "2022-07-01",
       "name": "[parameters('virtualNetworkName')]",
@@ -56,11 +67,17 @@
           {
             "name": "[parameters('subnetName')]",
             "properties": {
-              "addressPrefix": "[parameters('subnetRange')]"
+              "addressPrefix": "[parameters('subnetRange')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
+              }
             }
           }
         ]
-      }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('virtualNetworkName')))]"
+      ]
     }
   ]
 }
