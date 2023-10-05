@@ -16,6 +16,9 @@ param DNSServerAddress array
 @description('Location for all resources.')
 param location string
 
+@description('The ID of the Network Security Group to create')
+param nsgId string
+
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-07-01' = {
   name: virtualNetworkName
   location: location
@@ -33,6 +36,9 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2022-07-01' = {
         name: subnetName
         properties: {
           addressPrefix: subnetRange
+          networkSecurityGroup: {
+            id: nsgId
+          }
         }
       }
     ]

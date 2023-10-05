@@ -89,6 +89,16 @@ resource availabilitySet 'Microsoft.Compute/availabilitySets@2022-08-01' = {
   }
 }
 
+resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
+  name: '${virtualNetworkName}-nsg'
+  location: location
+  properties: {
+    securityRules: [
+      {}
+    ]
+  }
+}
+
 module VNet 'nestedtemplates/vnet.bicep' = {
   scope: resourceGroup()
   name: 'VNet'
@@ -98,6 +108,7 @@ module VNet 'nestedtemplates/vnet.bicep' = {
     subnetName: subnetName
     subnetRange: subnetRange
     location: location
+    nsgId: nsg.id
   }
 }
 
@@ -270,6 +281,7 @@ module updateVNetDNS 'nestedtemplates/vnet-with-dns-server.bicep' = {
       privateIPAddress
     ]
     location: location
+    nsgId: nsg.id
   }
   dependsOn: [
     createADForest
